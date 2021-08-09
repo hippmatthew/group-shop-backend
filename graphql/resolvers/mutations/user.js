@@ -5,9 +5,10 @@ const jwt = require("jsonwebtoken");
 const User = require("../../../models/user");
 const List = require("../../../models/list");
 const authenticate = require("../../../util/authentication");
-const { SECRET } = require("../../../config");
 const { user_validation } = require("../../../util/validation");
 const { get_user_index, get_list_index } = require("../../../util/get_index");
+
+const SECRET = process.env.SECRET || require("../../../config").SECRET;
 
 module.exports = {
   register: async (_, { info: { email, password, screen_name } }) => {

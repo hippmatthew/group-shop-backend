@@ -86,7 +86,7 @@ module.exports = gql`
     upgrade_temp_user(email: String!, password: String!): Tokened_User!
     delete_user: User!
     generate_new_token: Tokened_User!
-    update_user(screen_name: String, email: String, password: String)
+    update_user(screen_name: String, email: String, password: String): User!
 
     # List Functionality
     create_list(list_name: String!): List!
