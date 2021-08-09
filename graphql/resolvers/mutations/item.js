@@ -49,10 +49,12 @@ module.exports = {
           id: user._id,
           screen_name: user.screen_name,
         },
-        item: {
-          id: updated_list.items[updated_list.items.length - 1]._id,
-          ...updated_list.items[updated_list.items.length - 1]._doc,
-        },
+        item: [
+          {
+            id: updated_list.items[updated_list.items.length - 1]._id,
+            ...updated_list.items[updated_list.items.length - 1]._doc,
+          },
+        ],
       },
     });
 
@@ -90,10 +92,12 @@ module.exports = {
           id: user._id,
           screen_name: user.screen_name,
         },
-        item: {
-          id: item._id,
-          ...item._doc,
-        },
+        item: [
+          {
+            id: item._id,
+            ...item._doc,
+          },
+        ],
       },
     });
 
@@ -122,9 +126,6 @@ module.exports = {
     if (method == "claim") list.items[item_index].member = user.screen_name;
     else if (method == "unclaim") list.items[item_index].member = null;
 
-    list.items[item_index].last_modified = new Date().toISOString();
-    list.last_modified = new Date().toISOString();
-
     // overwrites the list in the database
     const updated_list = await list.save();
 
@@ -138,10 +139,12 @@ module.exports = {
           id: user._id,
           screen_name: user.screen_name,
         },
-        item: {
-          id: updated_list.items[item_index]._id,
-          ...updated_list.items[item_index]._doc,
-        },
+        item: [
+          {
+            id: updated_list.items[item_index]._id,
+            ...updated_list.items[item_index]._doc,
+          },
+        ],
       },
     });
 
@@ -175,8 +178,9 @@ module.exports = {
       list.items[item_index].purchased = false;
     }
 
-    list.items[item_index].last_modified = new Date().toISOString();
-    list.last_modified = new Date().toISOString();
+    const date = new Date().toISOString();
+    list.items[item_index].last_modified = date;
+    list.last_modified = date;
 
     // overwrites the list in the database
     const updated_list = await list.save();
@@ -191,10 +195,12 @@ module.exports = {
           id: user._id,
           screen_name: user.screen_name,
         },
-        item: {
-          id: updated_list.items[item_index]._id,
-          ...updated_list.items[item_index]._doc,
-        },
+        item: [
+          {
+            id: updated_list.items[item_index]._id,
+            ...updated_list.items[item_index]._doc,
+          },
+        ],
       },
     });
 
@@ -202,5 +208,33 @@ module.exports = {
       id: updated_list.items[item_index]._id,
       ...updated_list.items[item_index]._doc,
     };
+  },
+  clear_all_purchases: async (_, { listID }, { req, pubsub }) => {
+    const userID = authenticate(req);
+
+    const { valid, errors, list, user } = validate({
+      listID,
+      userID,
+      method: "clear",
+    });
+    if (!valid) throw new UserInputError("Clear-All Error", { errors });
+
+    for (let i = 0; i < list.items.length; i++)
+      if (list.items[i].purchased == true) list.items.splice(i, 1);
+
+    const updated_list = await list.save();
+
+    pubsub.publish(updated_list._id, {
+      item_updates: {
+        type: "clear",
+        affector: {
+          id: user._id,
+          screen_name: user.screen_name,
+        },
+        item: updated_list.items,
+      },
+    });
+
+    return updated_list.items;
   },
 };

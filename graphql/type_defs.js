@@ -50,7 +50,7 @@ module.exports = gql`
   type item_update {
     type: String!
     affector: Shortened_User!
-    item: Item!
+    item: [Item!]
   }
   type member_update {
     type: String!
@@ -105,6 +105,7 @@ module.exports = gql`
     remove_item(listID: ID!, itemID: ID!): Item!
     claim_item(listID: ID!, itemID: ID!, method: String): Item!
     purchase_item(listID: ID!, itemID: ID!, method: String): Item!
+    clear_all_purchases(listID: ID!): [Item!]
   }
   type Subscription {
     item_updates(listID: ID!): item_update!
