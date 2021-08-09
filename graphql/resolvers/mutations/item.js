@@ -222,6 +222,8 @@ module.exports = {
     for (let i = 0; i < list.items.length; i++)
       if (list.items[i].purchased == true) list.items.splice(i, 1);
 
+    list.last_modified = new Date().toISOString();
+
     const updated_list = await list.save();
 
     pubsub.publish(updated_list._id, {
