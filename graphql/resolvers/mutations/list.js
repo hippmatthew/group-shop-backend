@@ -2,15 +2,18 @@ const { UserInputError } = require("apollo-server-errors");
 
 const List = require("../../../models/list");
 const User = require("../../../models/user");
-const { list_validation } = require("../../../util/validation");
 const generate_code = require("../../../util/code_generator");
+const authenticate = require("../../../util/authentication");
+const { list_validation } = require("../../../util/validation");
 const {
   get_list_index,
   get_last_owned_index,
 } = require("../../../util/get_index");
 
 module.exports = {
-  create_list: async (_, { list_name, userID }) => {
+  create_list: async (_, { list_name }, { req }) => {
+    const userID = authenticate(req);
+
     // validation
     const { valid, errors, user } = await list_validation({
       list_name,
@@ -59,7 +62,9 @@ module.exports = {
       ...list._doc,
     };
   },
-  join_list: async (_, { code, userID }, { pubsub }) => {
+  join_list: async (_, { code }, { req, pubsub }) => {
+    const userID = authenticate(req);
+
     // validation
     const { errors, valid, list, user } = await list_validation({
       code,
@@ -125,7 +130,9 @@ module.exports = {
       ...updated_list._doc,
     };
   },
-  leave_list: async (_, { listID, userID }, { pubsub }) => {
+  leave_list: async (_, { listID }, { req, pubsub }) => {
+    const userID = authenticate(req);
+
     // validation
     const { valid, errors, list, user, user_index, list_index } =
       await list_validation({
@@ -225,7 +232,9 @@ module.exports = {
       ...updated_list._doc,
     };
   },
-  delete_list: async (_, { listID }) => {
+  delete_list: async (_, { listID }, { req }) => {
+    authenticate(req);
+
     try {
       const deleted_list = await List.findByIdAndDelete(listID);
 
@@ -249,15 +258,11 @@ module.exports = {
   },
   update_list: async (
     _,
-    {
-      listID,
-      userID,
-      ownerID = null,
-      list_name = null,
-      generate_new_code = false,
-    },
-    { pubsub }
+    { listID, ownerID = null, list_name = null, generate_new_code = false },
+    { req, pubsub }
   ) => {
+    const userID = authenticate(req);
+
     const { valid, errors, list, user, owner } = list_validation({
       listID,
       userID,

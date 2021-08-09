@@ -1,26 +1,27 @@
 {
   "name": "group-shop",
   "version": "1.0.0",
-  "description": "Creates a permanent account   Front end stores the user id associated with the account",
-  "main": "index.js",
+  "description": "",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ingleanthony/group-shopping.git"
+    "url": "git+https://github.com/ingleanthony/group-shopgit"
   },
-  "author": "A&M Studios",
+  "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ingleanthony/group-shopping/issues"
+    "url": "https://github.com/ingleanthony/group-shop/issues"
   },
-  "homepage": "https://github.com/ingleanthony/group-shopping#readme",
+  "homepage": "https://github.com/ingleanthony/group-shop#readme",
   "dependencies": {
     "apollo-server": "^2.23.0",
     "bcryptjs": "^2.4.3",
     "graphql": "^15.5.0",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.5"
   },
   "devDependencies": {

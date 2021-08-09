@@ -9,7 +9,6 @@ module.exports = async ({
   method = null,
   email = null,
   password = null,
-  confirm_password = null,
   screen_name = null,
 }) => {
   const errors = {};
@@ -18,6 +17,7 @@ module.exports = async ({
   let can_continue = false;
   switch (method) {
     case "register":
+    case "update":
     case "login":
       can_continue = true;
       break;
@@ -34,6 +34,7 @@ module.exports = async ({
       if (method == "register" && user)
         errors.email = "There is already a user with that email";
       else if (method == "login" && !user) errors.email = "User does not exist";
+      else if (method == "update" && user) errors.email = "User already exists";
     }
   }
 
@@ -45,14 +46,6 @@ module.exports = async ({
       const matched = await bcrypt.compare(password, user.password);
       if (!matched) errors.password = "Password is incorrect";
     }
-  }
-
-  // password confirmation must not be empty and must be the same as the password
-  if (confirm_password != null) {
-    if (confirm_password === "")
-      errors.confirm_password = "Confirm password must not be empty";
-    else if (confirm_password != password)
-      errors.confirm_password = "Passwords do not match";
   }
 
   // screen name must not be empty

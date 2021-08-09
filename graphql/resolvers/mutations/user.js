@@ -1,31 +1,27 @@
 const { UserInputError } = require("apollo-server-errors");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const User = require("../../../models/user");
 const List = require("../../../models/list");
+const authenticate = require("../../../util/authentication");
+const { SECRET } = require("../../../config");
 const { user_validation } = require("../../../util/validation");
 const { get_user_index, get_list_index } = require("../../../util/get_index");
 
 module.exports = {
-  register: async (
-    _,
-    { info: { email, password, confirm_password, screen_name } }
-  ) => {
+  register: async (_, { info: { email, password, screen_name } }) => {
     // validation
     const { valid, errors } = await user_validation({
       method: "register",
       email,
       password,
-      confirm_password,
       screen_name,
     });
     if (!valid) throw new UserInputError("Registration Error", { errors });
 
-    // mmmm salt
-    const salt = await bcrypt.genSalt(12);
-
     // hash the password BEFORE saving to the database
-    password = await bcrypt.hash(password, salt);
+    password = await bcrypt.hash(password, 12);
 
     // adds the new user to the database
     const user = await new User({
@@ -36,9 +32,15 @@ module.exports = {
       join_date: new Date().toISOString(),
     }).save();
 
+    // generate a token for the user
+    const token = jwt.sign(user._id, SECRET, { noTimestamp });
+
     return {
-      id: user._id,
-      ...user._doc,
+      token,
+      user: {
+        id: user._id,
+        ...user._doc,
+      },
     };
   },
   login: async (_, { email, password }) => {
@@ -69,18 +71,51 @@ module.exports = {
       join_date: "temp",
     }).save();
 
+    const token = jwt.sign(user._id, SECRET, { noTimestamp });
+
     return {
-      id: user._id,
-      ...user._doc,
+      token,
+      user: {
+        id: user._id,
+        ...user._doc,
+      },
     };
   },
-  delete_user: async (_, { userID }, { pubsub }) => {
+  upgrade_temp_user: async (_, { email, password }, { req }) => {
+    const userID = authenticate(req);
+    const user = User.findById(userID);
+
+    const { valid, errors } = await user_validation({
+      method: "update",
+      email,
+      password,
+    });
+    if (!valid) throw new UserInputError("Upgrade Error", { errors });
+
+    user.email = email;
+    user.password = password;
+    user.join_date = new Date().toISOString();
+    const updated_user = user.save();
+
+    const token = jwt.sign(user._id, SECRET, { noTimestamp });
+
+    return {
+      token,
+      user: {
+        id: updated_user._id,
+        ...updated_user._doc,
+      },
+    };
+  },
+  delete_user: async (_, __, { req, pubsub }) => {
     /*
      * 1) DELETE THE USER
      * 2) Seperate the owned and unowned lists
      * 3) For every user in the owned lists, remove the list from the user's list array *exluding the owner*
      * 4) For every list in the unowned lists, remove the user from the list members array and send an update
      */
+
+    const userID = authenticate(req);
 
     try {
       const deleted_user = await User.findByIdAndDelete(userID);
@@ -213,6 +248,24 @@ module.exports = {
       };
     } catch (err) {
       throw new Error("Account Deletion Error", err);
+    }
+  },
+  generate_new_token: async (_, __, { req }) => {
+    try {
+      const userID = authenticate(req);
+      const user = await User.findById(userID);
+
+      const token = jwt.sign(user._id, SECRET, { noTimestamp });
+
+      return {
+        token,
+        user: {
+          id: user._id,
+          ...user._doc,
+        },
+      };
+    } catch (err) {
+      throw new Error(err);
     }
   },
 };

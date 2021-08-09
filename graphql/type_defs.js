@@ -13,6 +13,10 @@ module.exports = gql`
     id: ID!
     screen_name: String!
   }
+  type Tokened_User {
+    token: String!
+    user: User!
+  }
   type List {
     id: ID!
     owner: ID!
@@ -77,15 +81,17 @@ module.exports = gql`
   }
   type Mutation {
     # User Functionality
-    register(info: registration_info): User!
+    register(info: registration_info): Tokened_User!
     login(email: String!, password: String!): User!
-    create_temp_user(screen_name: String!): User!
-    delete_user(userID: ID!): User!
+    create_temp_user(screen_name: String!): Tokened_User!
+    upgrade_temp_user(email: String!, password: String!): Tokened_User!
+    delete_user: User!
+    generate_new_token: Tokened_User!
 
     # List Functionality
-    create_list(list_name: String!, userID: ID!): List!
-    join_list(code: String!, userID: ID!): List!
-    leave_list(listID: ID!, userID: ID!): List!
+    create_list(list_name: String!): List!
+    join_list(code: String!): List!
+    leave_list(listID: ID!): List!
     delete_list(listID: ID!): List!
     update_list(
       listID: ID!
@@ -95,10 +101,10 @@ module.exports = gql`
     ): List!
 
     # Item Functionality
-    add_item(name: String!, listID: ID!, userID: ID!): Item!
-    remove_item(listID: ID!, itemID: ID!, userID: ID!): Item!
-    claim_item(listID: ID!, itemID: ID!, userID: ID!, method: String): Item!
-    purchase_item(listID: ID!, itemID: ID!, userID: ID!, method: String): Item!
+    add_item(name: String!, listID: ID!): Item!
+    remove_item(listID: ID!, itemID: ID!): Item!
+    claim_item(listID: ID!, itemID: ID!, method: String): Item!
+    purchase_item(listID: ID!, itemID: ID!, method: String): Item!
   }
   type Subscription {
     item_updates(listID: ID!): item_update!

@@ -1,6 +1,7 @@
 const { UserInputError } = require("apollo-server-errors");
 
 const User = require("../../../models/user");
+const authenticate = require("../../../util/authentication");
 const { get_list_index } = require("../../../util/get_index");
 const { item_validation } = require("../../../util/validation");
 
@@ -16,7 +17,9 @@ const update_members = async ({ _id, members, last_modified }) => {
 };
 
 module.exports = {
-  add_item: async (_, { name, listID, userID }, { pubsub }) => {
+  add_item: async (_, { name, listID }, { req, pubsub }) => {
+    const userID = authenticate(req);
+
     // validation
     const { valid, errors, list, user } = await item_validation({
       name,
@@ -58,7 +61,9 @@ module.exports = {
       ...updated_list.items[updated_list.items.length - 1]._doc,
     };
   },
-  remove_item: async (_, { listID, itemID, userID }, { pubsub }) => {
+  remove_item: async (_, { listID, itemID }, { req, pubsub }) => {
+    const userID = authenticate(req);
+
     // validation
     const { valid, errors, list, user, item_index } = await item_validation({
       listID,
@@ -99,9 +104,11 @@ module.exports = {
   },
   claim_item: async (
     _,
-    { listID, itemID, userID, method = "claim" },
-    { pubsub }
+    { listID, itemID, method = "claim" },
+    { req, pubsub }
   ) => {
+    const userID = authenticate(req);
+
     // validation
     const { errors, valid, list, user, item_index } = await item_validation({
       listID,
@@ -145,9 +152,11 @@ module.exports = {
   },
   purchase_item: async (
     _,
-    { listID, itemID, userID, method = "purchase" },
-    { pubsub }
+    { listID, itemID, method = "purchase" },
+    { req, pubsub }
   ) => {
+    const userID = authenticate(req);
+
     // validation
     const { errors, valid, list, user, item_index } = await item_validation({
       listID,
@@ -158,8 +167,13 @@ module.exports = {
     if (!valid) throw new UserInputError("Purchase Error", { errors });
 
     // updates whether the item is purchased or not based on the method
-    if (method == "purchase") list.items[item_index].purchased = true;
-    else if (method == "unpurchase") list.items[item_index].purchased = false;
+    if (method == "purchase") {
+      list.items[item_index].member = user.screen_name;
+      list.items[item_index].purchased = true;
+    } else if (method == "unpurchase") {
+      list.items[item_index].memebr = null;
+      list.items[item_index].purchased = false;
+    }
 
     list.items[item_index].last_modified = new Date().toISOString();
     list.last_modified = new Date().toISOString();
