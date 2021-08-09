@@ -4,7 +4,6 @@ module.exports = gql`
   type User {
     id: ID!
     email: String
-    password: String
     screen_name: String!
     lists: [Shortened_List!]!
     join_date: String!
@@ -87,6 +86,7 @@ module.exports = gql`
     upgrade_temp_user(email: String!, password: String!): Tokened_User!
     delete_user: User!
     generate_new_token: Tokened_User!
+    update_user(screen_name: String, email: String, password: String)
 
     # List Functionality
     create_list(list_name: String!): List!
@@ -95,7 +95,7 @@ module.exports = gql`
     delete_list(listID: ID!): List!
     update_list(
       listID: ID!
-      owner: ID!
+      owner: ID
       list_name: String
       generate_new_code: Boolean
     ): List!

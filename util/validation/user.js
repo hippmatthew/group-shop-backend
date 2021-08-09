@@ -45,6 +45,9 @@ module.exports = async ({
     else if (user && method == "login") {
       const matched = await bcrypt.compare(password, user.password);
       if (!matched) errors.password = "Password is incorrect";
+    } else if (user && method == "update") {
+      if (password === user.password)
+        errors.password = "Password must be different than previous password";
     }
   }
 

@@ -33,7 +33,7 @@ module.exports = {
     }).save();
 
     // generate a token for the user
-    const token = jwt.sign(user._id, SECRET, { noTimestamp });
+    const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
 
     return {
       token,
@@ -97,7 +97,7 @@ module.exports = {
     user.join_date = new Date().toISOString();
     const updated_user = user.save();
 
-    const token = jwt.sign(user._id, SECRET, { noTimestamp });
+    const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
 
     return {
       token,
@@ -255,7 +255,7 @@ module.exports = {
       const userID = authenticate(req);
       const user = await User.findById(userID);
 
-      const token = jwt.sign(user._id, SECRET, { noTimestamp });
+      const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
 
       return {
         token,
@@ -267,5 +267,47 @@ module.exports = {
     } catch (err) {
       throw new Error(err);
     }
+  },
+  update_user: async (
+    _,
+    { screen_name = null, email = null, password = null },
+    { req }
+  ) => {
+    const user = await User.findById(authenticate(req));
+
+    const { valid, errors } = await validate({
+      screen_name,
+      email,
+      password,
+      method: "update",
+    });
+    if (!valid) throw new UserInputError("User Update Error", { errors });
+
+    if (screen_name != null) {
+      user.screen_name = screen_name;
+
+      user.lists.forEach(async (user_list) => {
+        const list = await List.findById(user_list._id);
+
+        const user_index = get_user_index(list, user._id);
+        list.members[user_index].screen_name = user.screen_name;
+
+        await list.save();
+      });
+    }
+
+    if (email != null) user.email = email;
+
+    if (password != null) {
+      password = await bcrypt.hash(password, 12);
+      user.password = password;
+    }
+
+    const updated_user = await user.save();
+
+    return {
+      id: updated_user._id,
+      ...updated_user._doc,
+    };
   },
 };
