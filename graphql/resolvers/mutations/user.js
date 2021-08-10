@@ -72,7 +72,7 @@ module.exports = {
       join_date: "temp",
     }).save();
 
-    const token = jwt.sign(user._id, SECRET, { noTimestamp });
+    const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
 
     return {
       token,
