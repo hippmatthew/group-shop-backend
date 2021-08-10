@@ -18,7 +18,7 @@ const update_members = async ({ _id, members, last_modified }) => {
 
 module.exports = {
   add_item: async (_, { name, listID }, { req, pubsub }) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     // validation
     const { valid, errors, list, user } = await item_validation({
@@ -64,7 +64,7 @@ module.exports = {
     };
   },
   remove_item: async (_, { listID, itemID }, { req, pubsub }) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     // validation
     const { valid, errors, list, user, item_index } = await item_validation({
@@ -111,7 +111,7 @@ module.exports = {
     { listID, itemID, method = "claim" },
     { req, pubsub }
   ) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     // validation
     const { errors, valid, list, user, item_index } = await item_validation({
@@ -158,7 +158,7 @@ module.exports = {
     { listID, itemID, method = "purchase" },
     { req, pubsub }
   ) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     // validation
     const { errors, valid, list, user, item_index } = await item_validation({
@@ -210,7 +210,7 @@ module.exports = {
     };
   },
   clear_all_purchases: async (_, { listID }, { req, pubsub }) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     const { valid, errors, list, user } = validate({
       listID,

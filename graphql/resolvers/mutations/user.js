@@ -34,7 +34,7 @@ module.exports = {
     }).save();
 
     // generate a token for the user
-    const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
+    const token = jwt.sign({ userID: user._id }, SECRET, { noTimestamp: true });
 
     return {
       token,
@@ -53,7 +53,7 @@ module.exports = {
     });
     if (!valid) throw new UserInputError("Login Error", { errors });
 
-    const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
+    const token = jwt.sign({ userID: user._id }, SECRET, { noTimestamp: true });
 
     return {
       token,
@@ -80,7 +80,7 @@ module.exports = {
       join_date: "temp",
     }).save();
 
-    const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
+    const token = jwt.sign({ userID: user._id }, SECRET, { noTimestamp: true });
 
     return {
       token,
@@ -91,7 +91,7 @@ module.exports = {
     };
   },
   upgrade_temp_user: async (_, { email, password }, { req }) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
     const user = User.findById(userID);
 
     const { valid, errors } = await user_validation({
@@ -106,7 +106,7 @@ module.exports = {
     user.join_date = new Date().toISOString();
     const updated_user = user.save();
 
-    const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
+    const token = jwt.sign({ userID: user._id }, SECRET, { noTimestamp: true });
 
     return {
       token,
@@ -124,7 +124,7 @@ module.exports = {
      * 4) For every list in the unowned lists, remove the user from the list members array and send an update
      */
 
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     try {
       const deleted_user = await User.findByIdAndDelete(userID);
@@ -264,7 +264,9 @@ module.exports = {
       const userID = authenticate(req);
       const user = await User.findById(userID);
 
-      const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
+      const token = jwt.sign({ userID: user._id }, SECRET, {
+        noTimestamp: true,
+      });
 
       return {
         token,
@@ -282,7 +284,8 @@ module.exports = {
     { screen_name = null, email = null, password = null },
     { req }
   ) => {
-    const user = await User.findById(authenticate(req));
+    const { userID } = authenticate(req);
+    const user = await User.findById(userID);
 
     const { valid, errors } = await validate({
       screen_name,

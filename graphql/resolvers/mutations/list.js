@@ -12,7 +12,7 @@ const {
 
 module.exports = {
   create_list: async (_, { list_name }, { req }) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     // validation
     const { valid, errors, user } = await list_validation({
@@ -63,7 +63,7 @@ module.exports = {
     };
   },
   join_list: async (_, { code }, { req, pubsub }) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     // validation
     const { errors, valid, list, user } = await list_validation({
@@ -131,7 +131,7 @@ module.exports = {
     };
   },
   leave_list: async (_, { listID }, { req, pubsub }) => {
-    const userID = authenticate(req);
+    const { userID } = authenticate(req);
 
     // validation
     const { valid, errors, list, user, user_index, list_index } =
