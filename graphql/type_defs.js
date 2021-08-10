@@ -81,7 +81,7 @@ module.exports = gql`
   type Mutation {
     # User Functionality
     register(info: registration_info): Tokened_User!
-    login(email: String!, password: String!): User!
+    login(email: String!, password: String!): Tokened_User!
     create_temp_user(screen_name: String!): Tokened_User!
     upgrade_temp_user(email: String!, password: String!): Tokened_User!
     delete_user: User!

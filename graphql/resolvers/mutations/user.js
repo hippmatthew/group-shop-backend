@@ -53,7 +53,15 @@ module.exports = {
     });
     if (!valid) throw new UserInputError("Login Error", { errors });
 
-    return user;
+    const token = jwt.sign(user._id, SECRET, { noTimestamp: true });
+
+    return {
+      token,
+      user: {
+        id: user._id,
+        ...user._doc,
+      },
+    };
   },
   create_temp_user: async (_, { screen_name }) => {
     // validation
