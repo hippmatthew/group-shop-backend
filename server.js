@@ -4,12 +4,12 @@ const mongoose = require("mongoose");
 const typeDefs = require("./graphql/type_defs");
 const resolvers = require("./graphql/resolvers");
 
-const URI = process.env.MONGODB_URI || require("./config").URI;
+const URI = process.env.MONGODB_URI;
 
 // Subscriptions
 const pubsub = new PubSub();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 // Server parameters
 const server = new ApolloServer({
@@ -42,9 +42,3 @@ mongoose
   .catch((err) => {
     console.error(`Error starting server:\n${err}\n`);
   });
-
-/*
-    FOR BACKUP SECURITY:
-    Create a new api that stores a seperate identical dataset.
-    TRY ONLY CONNECTING WHEN NEEDED. IF TIMES ARE SLOW TRY SOMETHING ELSE. though you could make use of noede being async
-  */

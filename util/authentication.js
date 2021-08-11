@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { AuthenticationError } = require("apollo-server");
 
-const { SECRET } = require("../config.js");
+const SECRET = process.env.SECRET;
 
 module.exports = (req) => {
   /* 1) Get the token from the request
