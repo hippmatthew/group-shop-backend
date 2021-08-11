@@ -1,4 +1,3 @@
-const list = require("../../models/list");
 const List = require("../../models/list");
 const User = require("../../models/user");
 

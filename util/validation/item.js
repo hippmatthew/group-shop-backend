@@ -54,6 +54,7 @@ module.exports = async ({
       case "unclaim":
       case "purchase":
       case "unpurchase":
+      case "clear":
         break;
       default:
         errors.method = "Invalid method";

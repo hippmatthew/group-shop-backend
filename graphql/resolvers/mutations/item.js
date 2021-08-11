@@ -1,6 +1,7 @@
 const { UserInputError } = require("apollo-server-errors");
 
 const User = require("../../../models/user");
+const authenticate = require("../../../util/authentication");
 const { get_list_index } = require("../../../util/get_index");
 const { item_validation } = require("../../../util/validation");
 
@@ -16,7 +17,9 @@ const update_members = async ({ _id, members, last_modified }) => {
 };
 
 module.exports = {
-  add_item: async (_, { name, listID, userID }, { pubsub }) => {
+  add_item: async (_, { name, listID }, { req, pubsub }) => {
+    const { userID } = authenticate(req);
+
     // validation
     const { valid, errors, list, user } = await item_validation({
       name,
@@ -46,10 +49,12 @@ module.exports = {
           id: user._id,
           screen_name: user.screen_name,
         },
-        item: {
-          id: updated_list.items[updated_list.items.length - 1]._id,
-          ...updated_list.items[updated_list.items.length - 1]._doc,
-        },
+        item: [
+          {
+            id: updated_list.items[updated_list.items.length - 1]._id,
+            ...updated_list.items[updated_list.items.length - 1]._doc,
+          },
+        ],
       },
     });
 
@@ -58,7 +63,9 @@ module.exports = {
       ...updated_list.items[updated_list.items.length - 1]._doc,
     };
   },
-  remove_item: async (_, { listID, itemID, userID }, { pubsub }) => {
+  remove_item: async (_, { listID, itemID }, { req, pubsub }) => {
+    const { userID } = authenticate(req);
+
     // validation
     const { valid, errors, list, user, item_index } = await item_validation({
       listID,
@@ -85,10 +92,12 @@ module.exports = {
           id: user._id,
           screen_name: user.screen_name,
         },
-        item: {
-          id: item._id,
-          ...item._doc,
-        },
+        item: [
+          {
+            id: item._id,
+            ...item._doc,
+          },
+        ],
       },
     });
 
@@ -99,9 +108,11 @@ module.exports = {
   },
   claim_item: async (
     _,
-    { listID, itemID, userID, method = "claim" },
-    { pubsub }
+    { listID, itemID, method = "claim" },
+    { req, pubsub }
   ) => {
+    const { userID } = authenticate(req);
+
     // validation
     const { errors, valid, list, user, item_index } = await item_validation({
       listID,
@@ -114,9 +125,6 @@ module.exports = {
     // updates whether the item is claimed or not based on the method
     if (method == "claim") list.items[item_index].member = user.screen_name;
     else if (method == "unclaim") list.items[item_index].member = null;
-
-    list.items[item_index].last_modified = new Date().toISOString();
-    list.last_modified = new Date().toISOString();
 
     // overwrites the list in the database
     const updated_list = await list.save();
@@ -131,10 +139,12 @@ module.exports = {
           id: user._id,
           screen_name: user.screen_name,
         },
-        item: {
-          id: updated_list.items[item_index]._id,
-          ...updated_list.items[item_index]._doc,
-        },
+        item: [
+          {
+            id: updated_list.items[item_index]._id,
+            ...updated_list.items[item_index]._doc,
+          },
+        ],
       },
     });
 
@@ -145,9 +155,11 @@ module.exports = {
   },
   purchase_item: async (
     _,
-    { listID, itemID, userID, method = "purchase" },
-    { pubsub }
+    { listID, itemID, method = "purchase" },
+    { req, pubsub }
   ) => {
+    const { userID } = authenticate(req);
+
     // validation
     const { errors, valid, list, user, item_index } = await item_validation({
       listID,
@@ -158,11 +170,17 @@ module.exports = {
     if (!valid) throw new UserInputError("Purchase Error", { errors });
 
     // updates whether the item is purchased or not based on the method
-    if (method == "purchase") list.items[item_index].purchased = true;
-    else if (method == "unpurchase") list.items[item_index].purchased = false;
+    if (method == "purchase") {
+      list.items[item_index].member = user.screen_name;
+      list.items[item_index].purchased = true;
+    } else if (method == "unpurchase") {
+      list.items[item_index].memebr = null;
+      list.items[item_index].purchased = false;
+    }
 
-    list.items[item_index].last_modified = new Date().toISOString();
-    list.last_modified = new Date().toISOString();
+    const date = new Date().toISOString();
+    list.items[item_index].last_modified = date;
+    list.last_modified = date;
 
     // overwrites the list in the database
     const updated_list = await list.save();
@@ -177,10 +195,12 @@ module.exports = {
           id: user._id,
           screen_name: user.screen_name,
         },
-        item: {
-          id: updated_list.items[item_index]._id,
-          ...updated_list.items[item_index]._doc,
-        },
+        item: [
+          {
+            id: updated_list.items[item_index]._id,
+            ...updated_list.items[item_index]._doc,
+          },
+        ],
       },
     });
 
@@ -188,5 +208,35 @@ module.exports = {
       id: updated_list.items[item_index]._id,
       ...updated_list.items[item_index]._doc,
     };
+  },
+  clear_all_purchases: async (_, { listID }, { req, pubsub }) => {
+    const { userID } = authenticate(req);
+
+    const { valid, errors, list, user } = validate({
+      listID,
+      userID,
+      method: "clear",
+    });
+    if (!valid) throw new UserInputError("Clear-All Error", { errors });
+
+    for (let i = 0; i < list.items.length; i++)
+      if (list.items[i].purchased == true) list.items.splice(i, 1);
+
+    list.last_modified = new Date().toISOString();
+
+    const updated_list = await list.save();
+
+    pubsub.publish(updated_list._id, {
+      item_updates: {
+        type: "clear",
+        affector: {
+          id: user._id,
+          screen_name: user.screen_name,
+        },
+        item: updated_list.items,
+      },
+    });
+
+    return updated_list.items;
   },
 };

@@ -4,7 +4,6 @@ module.exports = gql`
   type User {
     id: ID!
     email: String
-    password: String
     screen_name: String!
     lists: [Shortened_List!]!
     join_date: String!
@@ -12,6 +11,10 @@ module.exports = gql`
   type Shortened_User {
     id: ID!
     screen_name: String!
+  }
+  type Tokened_User {
+    token: String!
+    user: User!
   }
   type List {
     id: ID!
@@ -46,7 +49,7 @@ module.exports = gql`
   type item_update {
     type: String!
     affector: Shortened_User!
-    item: Item!
+    item: [Item!]
   }
   type member_update {
     type: String!
@@ -77,28 +80,32 @@ module.exports = gql`
   }
   type Mutation {
     # User Functionality
-    register(info: registration_info): User!
-    login(email: String!, password: String!): User!
-    create_temp_user(screen_name: String!): User!
-    delete_user(userID: ID!): User!
+    register(info: registration_info): Tokened_User!
+    login(email: String!, password: String!): Tokened_User!
+    create_temp_user(screen_name: String!): Tokened_User!
+    upgrade_temp_user(email: String!, password: String!): Tokened_User!
+    delete_user: User!
+    generate_new_token: Tokened_User!
+    update_user(screen_name: String, email: String, password: String): User!
 
     # List Functionality
-    create_list(list_name: String!, userID: ID!): List!
-    join_list(code: String!, userID: ID!): List!
-    leave_list(listID: ID!, userID: ID!): List!
+    create_list(list_name: String!): List!
+    join_list(code: String!): List!
+    leave_list(listID: ID!): List!
     delete_list(listID: ID!): List!
     update_list(
       listID: ID!
-      owner: ID!
+      owner: ID
       list_name: String
       generate_new_code: Boolean
     ): List!
 
     # Item Functionality
-    add_item(name: String!, listID: ID!, userID: ID!): Item!
-    remove_item(listID: ID!, itemID: ID!, userID: ID!): Item!
-    claim_item(listID: ID!, itemID: ID!, userID: ID!, method: String): Item!
-    purchase_item(listID: ID!, itemID: ID!, userID: ID!, method: String): Item!
+    add_item(name: String!, listID: ID!): Item!
+    remove_item(listID: ID!, itemID: ID!): Item!
+    claim_item(listID: ID!, itemID: ID!, method: String): Item!
+    purchase_item(listID: ID!, itemID: ID!, method: String): Item!
+    clear_all_purchases(listID: ID!): [Item!]
   }
   type Subscription {
     item_updates(listID: ID!): item_update!
