@@ -18,13 +18,13 @@
   },
   "homepage": "https://github.com/ingleanthony/group-shop#readme",
   "dependencies": {
-    "apollo-server": "^2.23.0",
+    "apollo-server": "^2.25.2",
     "bcryptjs": "^2.4.3",
-    "graphql": "^15.5.0",
+    "graphql": "^15.5.1",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.12.5"
+    "mongoose": "^5.13.6"
   },
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "nodemon": "^2.0.12"
   }
 }
