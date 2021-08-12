@@ -95,6 +95,8 @@ module.exports = async ({
         var owner_index = get_user_index(list, ownerID);
         if (owner_index == -1) errors.userID = "User is not a part of the list";
       }
+
+      break;
     default:
       errors.method = "Invalid method";
   }
