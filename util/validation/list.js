@@ -68,7 +68,7 @@ module.exports = async ({
 
       var user_index = get_user_index(list, userID);
       if (user_index != -1)
-        errors.userID = "User is already a part of this list";
+        errors.userID = "You are already a part of this list";
       break;
     case "user-leave":
       if (!list) break;

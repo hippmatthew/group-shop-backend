@@ -4,7 +4,7 @@ const CHAR_CODES = generate_array(65, 90).concat(generate_array(48, 57));
 module.exports = () => {
   // puts together an array of randomly generated characters from CHAR_CODES
   const code = [];
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 6; i++) {
     const random_value =
       CHAR_CODES[Math.floor(Math.random() * CHAR_CODES.length)];
     code.push(String.fromCharCode(random_value));
