@@ -1,3 +1,6 @@
 node_modules
+<<<<<<< Updated upstream
 config.js
+=======
+>>>>>>> Stashed changes
 .env

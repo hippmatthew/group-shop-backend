@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const { UserInputError } = require("apollo-server-errors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
